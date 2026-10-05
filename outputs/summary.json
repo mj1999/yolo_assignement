@@ -1,0 +1,118 @@
+{
+  "model": "yolov8s_640",
+  "imgsz": 640,
+  "conf_threshold": 0.2,
+  "pad_ratio": 0.2,
+  "kernel_frac": 0.5,
+  "train_hours": 2.07,
+  "epochs_run": 30,
+  "metrics": {
+    "val": {
+      "precision": 0.8737,
+      "recall": 0.8226,
+      "mAP@50": 0.8618,
+      "mAP@50-95": 0.4688,
+      "inference_ms/img": 3.2424,
+      "total_ms/img": 5.397
+    },
+    "test": {
+      "precision": 0.9176,
+      "recall": 0.8926,
+      "mAP@50": 0.915,
+      "mAP@50-95": 0.661,
+      "inference_ms/img": 3.614,
+      "total_ms/img": 5.569
+    }
+  },
+  "test_recall_by_size": [
+    {
+      "size": "<16 px",
+      "plates": 60,
+      "recall": 0.5333
+    },
+    {
+      "size": "16-32 px",
+      "plates": 83,
+      "recall": 0.8554
+    },
+    {
+      "size": "32-64 px",
+      "plates": 90,
+      "recall": 0.9444
+    },
+    {
+      "size": ">=64 px",
+      "plates": 279,
+      "recall": 0.9785
+    }
+  ],
+  "privacy_by_pad": [
+    {
+      "pad_ratio": 0.0,
+      "plates_anonymised_%": 56.05,
+      "partially_covered_%": 35.35,
+      "fully_missed_%": 8.59,
+      "image_area_blurred_%": 1.85
+    },
+    {
+      "pad_ratio": 0.05,
+      "plates_anonymised_%": 80.47,
+      "partially_covered_%": 10.94,
+      "fully_missed_%": 8.59,
+      "image_area_blurred_%": 2.23
+    },
+    {
+      "pad_ratio": 0.1,
+      "plates_anonymised_%": 84.96,
+      "partially_covered_%": 6.45,
+      "fully_missed_%": 8.59,
+      "image_area_blurred_%": 2.64
+    },
+    {
+      "pad_ratio": 0.2,
+      "plates_anonymised_%": 89.26,
+      "partially_covered_%": 2.15,
+      "fully_missed_%": 8.59,
+      "image_area_blurred_%": 3.56
+    }
+  ],
+  "pipeline": {
+    "images": 386.0,
+    "plates blurred": 531.0,
+    "detect ms/frame (median)": 17.25,
+    "blur ms/frame (median)": 5.3,
+    "pipeline FPS": 44.34
+  },
+  "variants": [
+    {
+      "variant": "yolov8n",
+      "params_M": 3.16,
+      "GFLOPs": 8.86,
+      "COCO_mAP50-95": 37.3,
+      "GPU_ms": 16.98,
+      "CPU_ms": 43.29,
+      "GPU_FPS": 58.89,
+      "CPU_FPS": 23.1
+    },
+    {
+      "variant": "yolov8s",
+      "params_M": 11.17,
+      "GFLOPs": 28.81,
+      "COCO_mAP50-95": 44.9,
+      "GPU_ms": 16.55,
+      "CPU_ms": 84.15,
+      "GPU_FPS": 60.43,
+      "CPU_FPS": 11.88
+    },
+    {
+      "variant": "yolov8m",
+      "params_M": 25.9,
+      "GFLOPs": 79.31,
+      "COCO_mAP50-95": 50.2,
+      "GPU_ms": 16.66,
+      "CPU_ms": 189.33,
+      "GPU_FPS": 60.02,
+      "CPU_FPS": 5.28
+    }
+  ]
+}

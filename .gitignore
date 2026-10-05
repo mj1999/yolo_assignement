@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Dataset (2.5 GB, download from Kaggle: fareselmenshawii/large-license-plate-dataset)
+dataset/
+
+# Pretrained checkpoints (downloaded automatically by Ultralytics)
+/weights/
+*.pt
+!runs/yolov8s_640/weights/best.pt
+
+# Generated outputs (only summary.json and samples are kept)
+outputs/blurred_test/
+runs/*_eval_*/
+data.yaml
+
+# Editor / OS
+.ipynb_checkpoints/
+.DS_Store
