@@ -12,14 +12,15 @@ Automatically detects vehicle license plates in images and Gaussian-blurs only t
 | Test (386 images) | 0.918 | 0.893 | 0.915 | 0.661 |
 
 - **Privacy:** 89% of labelled test plates are fully covered by blur (confidence threshold 0.20, 20% box padding).
-- **Speed:** detection + blur runs at about 44 FPS end to end on an RTX 3070.
+- **Speed:** detection + blur runs at about 43 FPS end to end on an RTX 3070.
 - **Limitation:** recall drops to 53% for plates narrower than 16 px at model input. The full analysis and recommendations are in Section 10 of the notebook.
 
 ## Repository contents
 
 | Path | What it is |
 |---|---|
-| [case_study.ipynb](case_study.ipynb) | The full case study: model selection, training, evaluation, blurring, insights |
+| [case_study.ipynb](case_study.ipynb) | The full case study: data audit, coordinate conversion, label overlays, EDA, model selection, training, evaluation, blurring, insights |
+| [case_study.pdf](case_study.pdf) | The executed notebook exported to PDF (37 pages) |
 | [runs/yolov8s_640/](runs/yolov8s_640/) | Training run: `weights/best.pt`, `results.csv`, curves, confusion matrix |
 | [outputs/summary.json](outputs/summary.json) | Every key metric in machine-readable form |
 | [samples/](samples/) | Before / after examples from the test set |

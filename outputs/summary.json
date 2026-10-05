@@ -12,16 +12,16 @@
       "recall": 0.8226,
       "mAP@50": 0.8618,
       "mAP@50-95": 0.4688,
-      "inference_ms/img": 3.2424,
-      "total_ms/img": 5.397
+      "inference_ms/img": 3.3043,
+      "total_ms/img": 5.6274
     },
     "test": {
       "precision": 0.9176,
       "recall": 0.8926,
       "mAP@50": 0.915,
       "mAP@50-95": 0.661,
-      "inference_ms/img": 3.614,
-      "total_ms/img": 5.569
+      "inference_ms/img": 4.0473,
+      "total_ms/img": 5.9664
     }
   },
   "test_recall_by_size": [
@@ -79,9 +79,9 @@
   "pipeline": {
     "images": 386.0,
     "plates blurred": 531.0,
-    "detect ms/frame (median)": 17.25,
-    "blur ms/frame (median)": 5.3,
-    "pipeline FPS": 44.34
+    "detect ms/frame (median)": 17.69,
+    "blur ms/frame (median)": 5.36,
+    "pipeline FPS": 43.4
   },
   "variants": [
     {
@@ -89,30 +89,30 @@
       "params_M": 3.16,
       "GFLOPs": 8.86,
       "COCO_mAP50-95": 37.3,
-      "GPU_ms": 16.98,
-      "CPU_ms": 43.29,
-      "GPU_FPS": 58.89,
-      "CPU_FPS": 23.1
+      "GPU_ms": 14.74,
+      "CPU_ms": 39.18,
+      "GPU_FPS": 67.82,
+      "CPU_FPS": 25.53
     },
     {
       "variant": "yolov8s",
       "params_M": 11.17,
       "GFLOPs": 28.81,
       "COCO_mAP50-95": 44.9,
-      "GPU_ms": 16.55,
-      "CPU_ms": 84.15,
-      "GPU_FPS": 60.43,
-      "CPU_FPS": 11.88
+      "GPU_ms": 15.22,
+      "CPU_ms": 85.72,
+      "GPU_FPS": 65.72,
+      "CPU_FPS": 11.67
     },
     {
       "variant": "yolov8m",
       "params_M": 25.9,
       "GFLOPs": 79.31,
       "COCO_mAP50-95": 50.2,
-      "GPU_ms": 16.66,
-      "CPU_ms": 189.33,
-      "GPU_FPS": 60.02,
-      "CPU_FPS": 5.28
+      "GPU_ms": 17.19,
+      "CPU_ms": 190.61,
+      "GPU_FPS": 58.17,
+      "CPU_FPS": 5.25
     }
   ]
 }
