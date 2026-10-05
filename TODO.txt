@@ -1,0 +1,225 @@
+LICENSE PLATE CASE STUDY: WHAT IS LEFT FOR ME TO DO
+====================================================
+
+Current state
+-------------
+Done (executed, outputs saved in case_study.ipynb, pushed to GitHub):
+  - Cells 0-6: my title, problem statement, use case, recall-vs-precision, dataset, setup cell
+  - Part II, Sections 6-10: model selection, training, evaluation, blurring, insights
+  - Trained model: runs/yolov8s_640/weights/best.pt
+  - All key numbers: outputs/summary.json
+  - Anonymised test images: outputs/blurred_test/ (local only, not on GitHub)
+
+Missing:
+  - Sections 2-5 (Part I). They go in the gap between cell 7 (the empty code cell
+    after my setup cell) and the "Part II: Modelling (GPU)" heading.
+  - My own wording for all the markdown.
+  - The final PDF export.
+
+Business questions and where each one is answered:
+  Q1 normalised -> pixel coordinates ........ Section 3   (MINE, TO DO)
+  Q2 overlay function + why before training .. Section 4   (MINE, TO DO)
+  Q3 annotation quality vs blur accuracy ..... Sections 2 + 8.4 + 9.2 + 10 (partly done)
+  Q4 preprocessing without losing detail ..... Section 7.1 (done; rewrite in my own words)
+  Q5 YOLOv8 vs two-stage ..................... Section 6.0 (done; rewrite)
+  Q6 which variant, speed vs accuracy ........ Sections 6.2-6.3 (done; rewrite)
+  Q7 plate characteristics vs model scale .... Sections 6.1, 6.3, 8.3 (done; rewrite)
+  Q8 blurring only inside the box ............ Section 9 (done; rewrite)
+
+
+TASK 1: Fix the existing top cells                            (~15 min)
+------------------------------------------------------------------
+[ ] Cell 2 (UseCase): fix the typos
+      "informations" -> "information", "bluring" -> "blurring",
+      "footages" -> "footage", "legal limit" -> "legal limits"
+[ ] Cell 2: name the actual laws: GDPR (EU), CCPA (California), DPDP Act 2023 (India).
+[ ] Cell 2: add one sentence on WHY we blur instead of deleting the image:
+      the rest of the frame (traffic density, vehicle types, road conditions)
+      still has analytical value.
+[ ] Cell 3 (Recall vs Precision): fix "isnt" -> "isn't".
+[ ] Cell 4 (About Dataset): replace "~25,500 / ~1,000 / ~400" with the real counts
+      that Section 2 prints: 25,470 / 1,073 / 386.
+[ ] Cell 5 (Environment Setup): add a one-line hardware note, e.g.
+      "Trained locally on an NVIDIA RTX 3070 (8 GB VRAM), 12 CPU cores, 16 GB RAM,
+       rather than a Colab T4: faster per epoch and no session time-outs; the
+       smaller VRAM is handled with AMP and a batch size of 16."
+[ ] Cell 6: remove "import os" if it is still unused.
+[ ] Renumber the headings so the notebook reads 1, 2, 3 ... in order
+      (e.g. "## 1. Business Context", "## 1.1 Environment Setup").
+
+
+TASK 2: Section 2, Data Audit                                 (~1-1.5 h)
+------------------------------------------------------------------
+Goal: prove the dataset is complete and well-formed BEFORE training. This feeds Q3
+and the "EDA & Analytical Logic" grading criterion.
+
+Put a markdown heading "## 2. Data Audit" in place of the empty cell 7, then:
+
+[ ] 2.1 Paths cell: DATA_ROOT = Path("dataset"), SPLITS = ["train","val","test"],
+        IMG_EXTS = {".jpg", ".jpeg", ".png"}.
+        (Section 6 defines these again, which is fine. Use the same names.)
+
+[ ] 2.2 File integrity, one row per split -> a DataFrame (skeleton in the chat):
+        n_images, n_labels, matched, images_without_label, labels_without_image,
+        extensions.
+        Expected: 25,470 / 1,073 / 386, everything matched, only .jpg.
+
+[ ] 2.3 Parse EVERY label line into one DataFrame (labels_df):
+        columns: split, file, class_id, xc, yc, w, h
+        Tips: use line.split() (not split(" ")); skip blank lines.
+
+[ ] 2.4 Label checks on labels_df, shown as a small table:
+        - columns per line always 5?  (answers "does it have confidence scores?": NO)
+        - unique class ids (expect only 0)
+        - any value < 0 or > 1
+        - w or h <= 0, or tiny (< 0.002)
+        - boxes crossing the image edge (xc - w/2 < 0, xc + w/2 > 1, same for y)
+        - empty label files per split (expect 18 in train, 0 in val/test)
+        - duplicate lines inside the same file
+
+[ ] 2.5 Image integrity on a random sample (about 500 per split):
+        cv2.imread() returns None for a corrupt file; record width and height.
+
+[ ] 2.6 Markdown: findings plus answers to
+        a) Were there annotation problems? How many, in which split?
+        b) What share of images are background (empty labels)? Useful or harmful here?
+           (Only 18 of 25,470: very few negatives.)
+        c) Drop, fix or keep? ("Fix" only works for mechanical issues like clipping to [0,1].)
+        d) Mention the dataset-source finding: 83% of train is Roboflow (file names
+           contain ".rf."), val/test are 100% Open Images (16-char hex names).
+           Section 6.1 shows this in numbers, so refer to it.
+
+
+TASK 3: Section 3, YOLO -> pixel coordinates (Q1)             (~30-45 min)
+------------------------------------------------------------------
+[ ] Markdown: explain the YOLO format
+        class  x_center  y_center  width  height   (all divided by image W or H)
+[ ] Write the formula in markdown:
+        x1 = (xc - w/2) * W      y1 = (yc - h/2) * H
+        x2 = (xc + w/2) * W      y2 = (yc + h/2) * H
+    and explain: multiply by W/H to undo the normalisation, then subtract/add HALF
+    the width/height to go from centre to corners; OpenCV needs INTEGER pixel
+    coordinates, so round and clip to [0, W-1] / [0, H-1].
+[ ] Write the function yourself, e.g. yolo_to_pixels(xc, yc, w, h, W, H) -> (x1, y1, x2, y2) ints.
+    It must give the same result as yolo_to_xyxy() in Section 6 (which does no rounding).
+[ ] Show a worked example on one real label line with its image size, printing the
+    normalised values and the pixel values side by side.
+[ ] Optional: a round-trip check (pixel -> YOLO -> pixel gives the same box) or an assert.
+    Graders reward showing that the logic is verified.
+
+
+TASK 4: Section 4, Overlay boxes on raw images (Q2)           (~45 min)
+------------------------------------------------------------------
+[ ] Function draw_boxes(img_path, label_path) -> image with cv2.rectangle for every
+    label line (uses the Section 3 function). Remember OpenCV is BGR; convert to RGB
+    for matplotlib.
+[ ] Grid of about 6-9 images: mix of train (Roboflow close-ups AND Open Images scenes),
+    val and test. Include one image with several plates and one with a tiny plate.
+[ ] Markdown answering Q2, "why is this critical BEFORE training?":
+      - catches wrong coordinate conventions (corner vs centre, swapped x/y,
+        pixels instead of normalised) that would silently ruin training
+      - catches misaligned / loose / missing boxes (label noise); the model learns
+        exactly what the labels say, garbage in, garbage out
+      - confirms that class ids and image/label pairing are right
+      - cheap to do, while discovering these problems after a 2-hour training run is expensive
+[ ] Point out anything I SEE in the grid: loose boxes, unlabelled plates, etc.
+    (Section 8.4 later shows the same problems in the model's errors, so link the two.)
+
+
+TASK 5: Section 5, EDA                                        (~1-1.5 h)
+------------------------------------------------------------------
+Use labels_df from Section 2. Each plot needs a title, axis labels, and a one-line
+takeaway in markdown under it.
+
+[ ] Images and plates per split (bar chart).
+[ ] Plates per image (histogram / value counts): how many images have 1, 2, 3+ plates.
+[ ] Box width and height distribution (normalised), per split. Expect val/test
+    plates to be much smaller than train.
+[ ] Box aspect ratio (w*W / h*H): median ~2:1. Relevant to letterbox resizing (Q4).
+[ ] Box centre heatmap (xc vs yc, 2D histogram): where plates usually appear in the frame.
+[ ] Image resolution distribution (from the 2.5 sample): mostly 416x416 (Roboflow)
+    vs ~1024 px (Open Images).
+[ ] Summary markdown: what EDA implies for modelling. Small plates -> resolution and
+    model-scale choice (Q7); domain gap -> mosaic/scale augmentation (Q4).
+    This is the bridge into Section 6, so refer forward to 6.1.
+
+
+TASK 6: Rewrite Part II markdown in my own words              (~1-2 h)
+------------------------------------------------------------------
+Every markdown cell from "# Part II: Modelling (GPU)" onward was written by Claude.
+Go through each one, understand it, and rewrite it in my own voice. Keep the numbers.
+
+[ ] Part II intro: delete the note "Sections 2-5 ... come before this part" once they exist.
+[ ] 6.0  One-stage vs two-stage (Q5)
+[ ] 6.1  Plate characteristics (Q7)
+[ ] 6.2  Variant speed benchmark (Q6)
+[ ] 6.3  Decision: YOLOv8s (Q6, Q7)
+[ ] 7.1  Preprocessing (Q4)
+[ ] 7.2  Training curves (I should be able to explain: why val loss > train loss,
+         and why it is NOT overfitting: both losses keep falling together)
+[ ] 8.1  Metrics (be ready to explain mAP@50 vs mAP@50-95, as discussed in the chat)
+[ ] 8.2  Confidence threshold / F2
+[ ] 8.3  Recall by plate size
+[ ] 8.4  Error analysis (Q3): describe what I see in MY grid
+[ ] 9    Blurring steps (Q8)
+[ ] 9.1  Blur strength
+[ ] 9.2  Privacy coverage and padding
+[ ] 9.3  Pipeline speed
+[ ] 10   Insights & Recommendations: add at least one idea of my own (originality is graded)
+
+Things I must be able to explain without notes:
+  - why recall matters more than precision for this problem
+  - why test scores (mAP@50-95 0.661) are higher than val scores (0.469):
+    test plates are about twice as large
+  - why the box is padded by 20% before blurring
+  - why the blur kernel scales with plate size
+  - why GPU latency is about the same for n/s/m but CPU latency is not
+
+
+TASK 7: Make sure the notebook runs top to bottom              (~15 min + run time)
+------------------------------------------------------------------
+[ ] Kernel -> Restart, then Run All (on the PC with the GPU).
+    Training is SKIPPED automatically because runs/yolov8s_640 already holds a
+    finished run; a full run takes about 10 minutes.
+    Do NOT delete runs/yolov8s_640, or it will retrain for about 2 hours.
+[ ] Check that no cell shows an error and that the execution numbers are sequential.
+[ ] Variable names in my Sections 2-5 must not clash with Part II
+    (Part II uses: plates, preds, model, results, summary, CONF, PAD, IMGSZ, DATA_ROOT ...).
+    If I reuse a name, use it for the same thing, or pick a different one.
+
+
+TASK 8: Export to PDF and submit                              (~30 min)
+------------------------------------------------------------------
+[ ] VS Code: "..." menu in the notebook toolbar -> Export -> HTML, open it in a
+    browser -> Print -> Save as PDF.
+    (In Colab: File -> Print -> Save as PDF. A Colab LINK is NOT accepted.)
+[ ] Check: fewer than 50 pages and smaller than 20 MB.
+    If too long: shrink figure sizes, or remove the n/s/m CPU benchmark rows.
+[ ] Open the PDF and check that every figure and table is readable and nothing is cut
+    off at page edges (wide DataFrames can overflow).
+[ ] Read it once from start to finish as if I were the grader:
+    business story -> data -> coordinates -> EDA -> model -> results -> insights.
+[ ] Only ONE submission is allowed and it cannot be edited, so submit only the final version.
+
+
+TASK 9: Update GitHub when finished                            (~5 min)
+------------------------------------------------------------------
+[ ] git add case_study.ipynb
+    git commit -m "Add data audit, coordinate conversion, overlay and EDA sections"
+    git push
+    (Commits use my noreply identity, already configured for this repo.)
+[ ] Optional: delete hello.py (leftover from `uv init`, not committed).
+[ ] Optional: since the repo is public, consider making it private until after the
+    deadline:
+    "C:\Program Files\GitHub CLI\gh.exe" repo edit mj1999/yolo_assignement --visibility private --accept-visibility-change-consequences
+
+
+Useful reference numbers (all in outputs/summary.json)
+------------------------------------------------------
+  Test:  precision 0.918 | recall 0.893 | mAP@50 0.915 | mAP@50-95 0.661
+  Val:   precision 0.874 | recall 0.823 | mAP@50 0.862 | mAP@50-95 0.469
+  Confidence threshold 0.20 | padding 20% | kernel 0.5 x plate width
+  Plates fully blurred 89.3% | missed 8.6% | image area blurred 3.6%
+  Recall by plate width: <16px 53% | 16-32px 86% | 32-64px 94% | >=64px 98%
+  Pipeline: ~44 FPS (detect ~17 ms + blur ~5 ms) on RTX 3070
+  Training: 30 epochs, 2.1 h, best epoch 26
